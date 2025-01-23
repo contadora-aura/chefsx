@@ -35,6 +35,15 @@ router.get("/", (req, res) => {
   res.status(200).json(users);
 });
 
+// Získanie používateľa podľa ID
+router.get("/:id", (req, res) => {
+  const user = users.find((u) => u.id === req.params.id);
+  if (!user) {
+    return res.status(404).json({ code: "not_found", message: "Používateľ nebol nájdený." });
+  }
+  res.status(200).json(user);
+});
+
 // Aktualizácia používateľa (pridanie obľúbených receptov)
 router.put("/:id", (req, res) => {
   const user = users.find((u) => u.id === req.params.id);
