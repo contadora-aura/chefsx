@@ -17,7 +17,7 @@ const userSchema = {
 };
 
 // Pridávanie používateľov
-router.post("/", (req, res) => {
+router.post("/users", (req, res) => {
   const { name, email } = req.body;
   if (!name || !email) {
     return res.status(400).json({ code: "validation_error", message: "Chýba meno alebo email." });
@@ -29,12 +29,12 @@ router.post("/", (req, res) => {
 });
 
 // Získanie používateľov
-router.get("/", (req, res) => {
+router.get("/users", (req, res) => {
   res.status(200).json(users);
 });
 
 // Aktualizácia používateľa (pridanie obľúbených receptov)
-router.put("/:id", (req, res) => {
+router.put("/users/:id", (req, res) => {
   const user = users.find((u) => u.id === req.params.id);
   if (!user) {
     return res.status(404).json({ code: "not_found", message: "Používateľ nebol nájdený." });
@@ -50,7 +50,7 @@ router.put("/:id", (req, res) => {
 });
 
 // Odstránenie používateľa
-router.delete("/:id", (req, res) => {
+router.delete("/users/:id", (req, res) => {
   const index = users.findIndex((u) => u.id === req.params.id);
   if (index === -1) {
     return res.status(404).json({ code: "not_found", message: "Používateľ nebol nájdený." });

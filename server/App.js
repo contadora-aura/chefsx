@@ -6,7 +6,7 @@ const app = express();
 const ajv = new Ajv();
 
 // Importovanie logiky pre používateľov
-const usersRouter = require("./users");
+const usersRouter = require("./users.js");
 
 const port = 8000;
 
