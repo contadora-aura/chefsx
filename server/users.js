@@ -1,10 +1,29 @@
 const express = require("express");
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 const router = express.Router();
 const Ajv = require("ajv");
 const ajv = new Ajv();
 
-let users = [];
+// Cesta k súboru s používateľmi
+const usersFile = path.join(__dirname, "database", "users.json");
+
+// Funkcia na čítanie používateľov z JSON súboru
+const readUsers = () => {
+  if (fs.existsSync(usersFile)) {
+    const data = fs.readFileSync(usersFile, "utf-8");
+    return JSON.parse(data);
+  }
+  return [];
+};
+
+// Funkcia na zapisovanie používateľov do JSON súboru
+const writeUsers = (users) => {
+  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2), "utf-8");
+};
+
+let users = readUsers(); // Načítanie používateľov zo súboru
 
 // Schéma pre validáciu používateľa
 const userSchema = {
@@ -27,6 +46,7 @@ router.post("/", (req, res) => {
 
   const newUser = { id: crypto.randomUUID(), name, email, favorites: [] };
   users.push(newUser);
+  writeUsers(users); // Uloženie do súboru
   res.status(201).json({ message: "Používateľ bol úspešne vytvorený.", user: newUser });
 });
 
@@ -57,6 +77,7 @@ router.put("/:id", (req, res) => {
   }
 
   user.favorites = [...new Set([...user.favorites, ...favorites])];
+  writeUsers(users); // Uloženie do súboru
   res.status(200).json({ message: "Používateľ bol úspešne aktualizovaný.", user });
 });
 
@@ -68,6 +89,7 @@ router.delete("/:id", (req, res) => {
   }
 
   users.splice(index, 1);
+  writeUsers(users); // Uloženie do súboru
   res.status(200).json({ message: "Používateľ bol úspešne zmazaný." });
 });
 
