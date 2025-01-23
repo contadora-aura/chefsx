@@ -2,8 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const crypto = require("crypto");
 const Ajv = require("ajv");
-const app = express();
 const ajv = new Ajv();
+const app = express();
 
 // Importovanie logiky pre recepty
 const recipesRouter = require("./recipes.js");
