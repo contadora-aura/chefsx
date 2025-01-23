@@ -5,7 +5,7 @@ const Ajv = require("ajv");
 const app = express();
 const ajv = new Ajv();
 
-// Importovanie logiky pre používateľov
+// Importovanie logiky pre používateľov - Kristián
 const usersRouter = require("./users");
 
 const port = 8000;
@@ -16,7 +16,7 @@ let comments = [];
 app.use(cors());
 app.use(express.json());
 
-// Schéma pre validáciu vstupu receptu
+// Schéma pre validáciu vstupu receptu - Kristián
 const recipeSchema = {
   type: "object",
   properties: {
@@ -33,7 +33,7 @@ const recipeSchema = {
   additionalProperties: false,
 };
 
-// CRUD operácie pre recepty
+// CRUD operácie pre recepty - Kristián
 app.post("/recipes", (req, res) => {
   const validate = ajv.compile(recipeSchema);
   if (!validate(req.body)) {
@@ -82,7 +82,7 @@ app.delete("/recipes/:id", (req, res) => {
   res.status(200).json({ message: "Recept bol úspešne zmazaný." });
 });
 
-// Pridávanie komentárov k receptom
+// Pridávanie komentárov k receptom - Kristián
 app.post("/recipes/:id/comments", (req, res) => {
   const { text, userId } = req.body;
   if (!text || !userId) {
@@ -104,10 +104,10 @@ app.get("/recipes/:id/comments", (req, res) => {
   res.status(200).json(recipeComments);
 });
 
-// Používateľský router
+// Používateľský router - Kristián
 app.use("/users", usersRouter);
 
-// Error handler
+// Error handler - Kristián
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ code: "server_error", message: "Niečo sa pokazilo. Skús to znova." });
