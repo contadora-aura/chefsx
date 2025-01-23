@@ -39,7 +39,7 @@ app.post("/recipes", (req, res) => {
 
   const newRecipe = { id: crypto.randomUUID(), ...req.body };
   recipes.push(newRecipe);
-  res.status(201).json({ message: "Recipe successfully created", recipe: newRecipe });
+  res.status(201).json({ message: "Recept bol úspešne vytvorený.", recipe: newRecipe });
 });
 
 // Výpis všetkých receptov - Kristián
@@ -51,7 +51,7 @@ app.get("/recipes", (req, res) => {
 app.get("/recipes/:id", (req, res) => {
   const recipe = recipes.find((r) => r.id === req.params.id);
   if (!recipe) {
-    return res.status(404).json({ code: "not_found", message: "Recipe not found" });
+    return res.status(404).json({ code: "not_found", message: "Recept nebol nájdený." });
   }
   res.status(200).json(recipe);
 });
@@ -65,22 +65,22 @@ app.put("/recipes/:id", (req, res) => {
 
   const index = recipes.findIndex((r) => r.id === req.params.id);
   if (index === -1) {
-    return res.status(404).json({ code: "not_found", message: "Recipe not found" });
+    return res.status(404).json({ code: "not_found", message: "Recept nebol nájdený." });
   }
 
   recipes[index] = { ...recipes[index], ...req.body };
-  res.status(200).json({ message: "Recipe successfully updated", recipe: recipes[index] });
+  res.status(200).json({ message: "Recept bol úspešne aktualizovaný.", recipe: recipes[index] });
 });
 
 // Zmazanie receptu podľa ID - Kristián
 app.delete("/recipes/:id", (req, res) => {
   const index = recipes.findIndex((r) => r.id === req.params.id);
   if (index === -1) {
-    return res.status(404).json({ code: "not_found", message: "Recipe not found" });
+    return res.status(404).json({ code: "not_found", message: "Recept nebol nájdený." });
   }
 
   recipes.splice(index, 1);
-  res.status(200).json({ message: "Recipe successfully deleted" });
+  res.status(200).json({ message: "Rececept bol úspešne vytvorený." });
 });
 
 // Filtrovanie receptov podľa kategórie a ingrediencie - Kristián
@@ -103,7 +103,7 @@ app.get("/recipes/search", (req, res) => {
 // Error handler - Kristián
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ code: "server_error", message: "Something went wrong. Please try again later." });
+  res.status(500).json({ code: "server_error", message: "Niečo sa pokazilo. Skús to znova." });
 });
 
 app.listen(port, () => {
