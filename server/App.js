@@ -5,14 +5,18 @@ const Ajv = require("ajv");
 const app = express();
 const ajv = new Ajv();
 
+// Importovanie logiky pre používateľov
+const usersRouter = require("./users");
+
 const port = 8000;
 
 let recipes = [];
+let comments = [];
 
 app.use(cors());
 app.use(express.json());
 
-// Schéma pre validáciu vstupu receptu - Kristián
+// Schéma pre validáciu vstupu receptu
 const recipeSchema = {
   type: "object",
   properties: {
@@ -29,7 +33,7 @@ const recipeSchema = {
   additionalProperties: false,
 };
 
-// Vytvorenie receptu - Kristián
+// CRUD operácie pre recepty
 app.post("/recipes", (req, res) => {
   const validate = ajv.compile(recipeSchema);
   if (!validate(req.body)) {
@@ -41,12 +45,10 @@ app.post("/recipes", (req, res) => {
   res.status(201).json({ message: "Recept bol úspešne vytvorený.", recipe: newRecipe });
 });
 
-// Výpis všetkých receptov - Kristián
 app.get("/recipes", (req, res) => {
   res.status(200).json(recipes);
 });
 
-// Výpis receptu podľa ID - Kristián 
 app.get("/recipes/:id", (req, res) => {
   const recipe = recipes.find((r) => r.id === req.params.id);
   if (!recipe) {
@@ -55,7 +57,6 @@ app.get("/recipes/:id", (req, res) => {
   res.status(200).json(recipe);
 });
 
-// Aktualizácia receptu podľa ID - Kristián
 app.put("/recipes/:id", (req, res) => {
   const validate = ajv.compile(recipeSchema);
   if (!validate(req.body)) {
@@ -71,7 +72,6 @@ app.put("/recipes/:id", (req, res) => {
   res.status(200).json({ message: "Recept bol úspešne aktualizovaný.", recipe: recipes[index] });
 });
 
-// Zmazanie receptu podľa ID - Kristián
 app.delete("/recipes/:id", (req, res) => {
   const index = recipes.findIndex((r) => r.id === req.params.id);
   if (index === -1) {
@@ -79,27 +79,35 @@ app.delete("/recipes/:id", (req, res) => {
   }
 
   recipes.splice(index, 1);
-  res.status(200).json({ message: "Rececept bol úspešne vytvorený." });
+  res.status(200).json({ message: "Recept bol úspešne zmazaný." });
 });
 
-// Filtrovanie receptov podľa kategórie a ingrediencie - Kristián
-app.get("/recipes/search", (req, res) => {
-  const { category, ingredient } = req.query;
-
-  let filteredRecipes = recipes;
-
-  if (category) {
-    filteredRecipes = filteredRecipes.filter((r) => r.category === category);
+// Pridávanie komentárov k receptom
+app.post("/recipes/:id/comments", (req, res) => {
+  const { text, userId } = req.body;
+  if (!text || !userId) {
+    return res.status(400).json({ code: "validation_error", message: "Chýba text alebo používateľ ID." });
   }
 
-  if (ingredient) {
-    filteredRecipes = filteredRecipes.filter((r) => r.ingredients.includes(ingredient));
+  const recipe = recipes.find((r) => r.id === req.params.id);
+  if (!recipe) {
+    return res.status(404).json({ code: "not_found", message: "Recept nebol nájdený." });
   }
 
-  res.status(200).json(filteredRecipes);
+  const newComment = { id: crypto.randomUUID(), recipeId: req.params.id, userId, text, createdAt: new Date() };
+  comments.push(newComment);
+  res.status(201).json({ message: "Komentár bol úspešne pridaný.", comment: newComment });
 });
 
-// Error handler - Kristián
+app.get("/recipes/:id/comments", (req, res) => {
+  const recipeComments = comments.filter((c) => c.recipeId === req.params.id);
+  res.status(200).json(recipeComments);
+});
+
+// Používateľský router
+app.use("/users", usersRouter);
+
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ code: "server_error", message: "Niečo sa pokazilo. Skús to znova." });
