@@ -13,7 +13,7 @@ let recipes = [];
 app.use(cors());
 app.use(express.json());
 
-// Schéma pre validáciu vstupu receptu
+// Schéma pre validáciu vstupu receptu - Kristián
 const recipeSchema = {
   type: "object",
   properties: {
@@ -30,7 +30,7 @@ const recipeSchema = {
   additionalProperties: false,
 };
 
-// Vytvorenie receptu
+// Vytvorenie receptu - Kristián
 app.post("/recipes", (req, res) => {
   const validate = ajv.compile(recipeSchema);
   if (!validate(req.body)) {
@@ -42,12 +42,12 @@ app.post("/recipes", (req, res) => {
   res.status(201).json({ message: "Recipe successfully created", recipe: newRecipe });
 });
 
-// Výpis všetkých receptov
+// Výpis všetkých receptov - Kristián
 app.get("/recipes", (req, res) => {
   res.status(200).json(recipes);
 });
 
-// Výpis receptu podľa ID
+// Výpis receptu podľa ID - Kristián 
 app.get("/recipes/:id", (req, res) => {
   const recipe = recipes.find((r) => r.id === req.params.id);
   if (!recipe) {
@@ -56,7 +56,7 @@ app.get("/recipes/:id", (req, res) => {
   res.status(200).json(recipe);
 });
 
-// Aktualizácia receptu podľa ID
+// Aktualizácia receptu podľa ID - Kristián
 app.put("/recipes/:id", (req, res) => {
   const validate = ajv.compile(recipeSchema);
   if (!validate(req.body)) {
@@ -72,7 +72,7 @@ app.put("/recipes/:id", (req, res) => {
   res.status(200).json({ message: "Recipe successfully updated", recipe: recipes[index] });
 });
 
-// Zmazanie receptu podľa ID
+// Zmazanie receptu podľa ID - Kristián
 app.delete("/recipes/:id", (req, res) => {
   const index = recipes.findIndex((r) => r.id === req.params.id);
   if (index === -1) {
@@ -83,7 +83,7 @@ app.delete("/recipes/:id", (req, res) => {
   res.status(200).json({ message: "Recipe successfully deleted" });
 });
 
-// Filtrovanie rec
+// Filtrovanie receptov podľa kategórie a ingrediencie - Kristián
 app.get("/recipes/search", (req, res) => {
   const { category, ingredient } = req.query;
 
@@ -100,7 +100,7 @@ app.get("/recipes/search", (req, res) => {
   res.status(200).json(filteredRecipes);
 });
 
-// Error handler
+// Error handler - Kristián
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ code: "server_error", message: "Something went wrong. Please try again later." });
