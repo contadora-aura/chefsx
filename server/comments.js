@@ -10,10 +10,10 @@ let comments = [];
 const commentSchema = {
   type: "object",
   properties: {
-    text: { type: "string", minLength: 1 },
-    user: { type: "string", minLength: 1 },
+    UserId: { type: "string", minLength: 1 },
+    Comment: { type: "string", minLength: 1 },
   },
-  required: ["text", "user"],
+  required: ["UserId", "Comment"],
   additionalProperties: false,
 };
 
@@ -21,8 +21,8 @@ const commentSchema = {
 const partialCommentSchema = {
   type: "object",
   properties: {
-    text: { type: "string", minLength: 1 },
-    user: { type: "string", minLength: 1 },
+    UserId: { type: "string", minLength: 1 },
+    Comment: { type: "string", minLength: 1 },
   },
   additionalProperties: false,
 };
