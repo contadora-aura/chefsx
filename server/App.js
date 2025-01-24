@@ -5,25 +5,25 @@ const Ajv = require("ajv");
 const ajv = new Ajv();
 const app = express();
 
-// Importovanie logiky pre recepty
+// Importovanie logiky pre recepty (recipes)
 const recipesRouter = require("./recipes.js");
 // Importovanie logiky pre používateľov
 const usersRouter = require("./users.js");
-// Importovanie logiky pre komentáre
+// Importovanie logiky pre komentáre (comments)
 const commentsRouter = require("./comments.js");
 
 const port = 8000;
 app.use(cors());
 app.use(express.json());
 
-// Receptový router
+// Receptový router (recipes)
 app.use("/recipes", recipesRouter);
-// Používateľský router
+// Používateľský router (users)
 app.use("/users", usersRouter);
-// Komentárový router
+// Komentárový router (comments)
 app.use("/comments", commentsRouter);
 
-// Error handler
+// Error handler middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ code: "server_error", message: "Niečo sa pokazilo. Skús to znova neskôr." });
