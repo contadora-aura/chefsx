@@ -6,26 +6,27 @@ const router = express.Router();
 const Ajv = require("ajv");
 const ajv = new Ajv();
 
-// Cesta k súboru s receptami
+// Cesta k súborom
 const recipesFile = path.join(__dirname, "database", "recipes.json");
+const usersFile = path.join(__dirname, "database", "users.json");
 
-// Funkcia na čítanie receptov z JSON súboru
-const readRecipes = () => {
-  if (fs.existsSync(recipesFile)) {
-    const data = fs.readFileSync(recipesFile, "utf-8");
+// Funkcie na čítanie/zapisovanie
+const readData = (filePath) => {
+  if (fs.existsSync(filePath)) {
+    const data = fs.readFileSync(filePath, "utf-8");
     return JSON.parse(data);
   }
   return [];
 };
 
-// Funkcia na zapisovanie receptov do JSON súboru
-const writeRecipes = (recipes) => {
-  fs.writeFileSync(recipesFile, JSON.stringify(recipes, null, 2), "utf-8");
+const writeData = (filePath, data) => {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
 };
 
-let recipes = readRecipes(); // Načítanie receptov zo súboru
+let recipes = readData(recipesFile);
+let users = readData(usersFile);
 
-// Schéma pre validáciu vstupu receptu
+// Schéma pre validáciu receptu
 const recipeSchema = {
   type: "object",
   properties: {
@@ -51,7 +52,7 @@ router.post("/", (req, res) => {
 
   const newRecipe = { id: crypto.randomUUID(), ...req.body };
   recipes.push(newRecipe);
-  writeRecipes(recipes); // Uloženie do súboru
+  writeData(recipesFile, recipes); // Uloženie do súboru
   res.status(201).json({ message: "Recept bol úspešne vytvorený.", recipe: newRecipe });
 });
 
@@ -60,42 +61,145 @@ router.get("/", (req, res) => {
   res.status(200).json(recipes);
 });
 
-// Získanie receptu podľa ID
-router.get("/:id", (req, res) => {
-  const recipe = recipes.find((r) => r.id === req.params.id);
+// Filtrovanie receptov
+router.get("/filter", (req, res) => {
+  const { category, ingredients, popularity, difficulty, search, maxPrepTime, page = 1, limit = 10 } = req.query;
+
+  let filteredRecipes = recipes;
+
+  // Filtrovanie podľa kategórie
+  if (category) {
+    filteredRecipes = filteredRecipes.filter((recipe) => recipe.category === category);
+  }
+
+  // Filtrovanie podľa ingrediencií
+  if (ingredients) {
+    const ingredientList = ingredients.split(",").map((ing) => ing.trim().toLowerCase());
+    filteredRecipes = filteredRecipes.filter((recipe) =>
+      ingredientList.every((ing) =>
+        recipe.ingredients.some((ingredient) => ingredient.toLowerCase().includes(ing))
+      )
+    );
+  }
+
+  // Filtrovanie podľa popularity
+  if (popularity) {
+    const minPopularity = parseFloat(popularity);
+    filteredRecipes = filteredRecipes.filter((recipe) => recipe.popularity >= minPopularity);
+  }
+
+  // Filtrovanie podľa obtiažnosti
+  if (difficulty) {
+    filteredRecipes = filteredRecipes.filter((recipe) => recipe.difficulty === difficulty);
+  }
+
+  // Vyhľadávanie podľa názvu
+  if (search) {
+    const keyword = search.toLowerCase();
+    filteredRecipes = filteredRecipes.filter((recipe) =>
+      recipe.name.toLowerCase().includes(keyword)
+    );
+  }
+
+  // Filtrovanie podľa času prípravy
+  if (maxPrepTime) {
+    const maxTime = parseInt(maxPrepTime, 10);
+    filteredRecipes = filteredRecipes.filter((recipe) => {
+      const prepTime = parseInt(recipe.prepTime.split(" ")[0], 10);
+      return prepTime <= maxTime;
+    });
+  }
+
+  // Stránkovanie
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+  const paginatedRecipes = filteredRecipes.slice(startIndex, endIndex);
+
+  res.status(200).json({
+    total: filteredRecipes.length,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    recipes: paginatedRecipes,
+  });
+});
+
+// Hodnotenie receptov
+router.post("/rate/:recipeId", (req, res) => {
+  const { userId, rating } = req.body;
+  const recipeId = req.params.recipeId;
+
+  const recipe = recipes.find((r) => r.id === recipeId);
   if (!recipe) {
-    return res.status(404).json({ code: "not_found", message: "Recept nebol nájdený." });
+    return res.status(404).json({ code: "recipe_not_found", message: "Recept nebol nájdený." });
   }
-  res.status(200).json(recipe);
+
+  if (rating < 0 || rating > 5) {
+    return res.status(400).json({ code: "invalid_rating", message: "Hodnotenie musí byť medzi 0 a 5." });
+  }
+
+  if (!recipe.ratings) {
+    recipe.ratings = [];
+  }
+
+  recipe.ratings.push({ userId, rating });
+  recipe.popularity = (
+    recipe.ratings.reduce((sum, r) => sum + r.rating, 0) / recipe.ratings.length
+  ).toFixed(2);
+
+  writeData(recipesFile, recipes);
+  res.status(200).json({ message: "Hodnotenie bolo pridané.", recipe });
 });
 
-// Aktualizácia receptu podľa ID
-router.put("/:id", (req, res) => {
-  const validate = ajv.compile(recipeSchema);
-  if (!validate(req.body)) {
-    return res.status(400).json({ code: "validation_error", errors: validate.errors });
+// Pridanie receptu do obľúbených
+router.put("/favorites/:userId/:recipeId", (req, res) => {
+  const userId = req.params.userId;
+  const recipeId = req.params.recipeId;
+
+  const userIndex = users.findIndex((u) => u.id === userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ code: "user_not_found", message: "Používateľ nebol nájdený." });
   }
 
-  const index = recipes.findIndex((r) => r.id === req.params.id);
-  if (index === -1) {
-    return res.status(404).json({ code: "not_found", message: "Recept nebol nájdený." });
+  const recipeExists = recipes.some((r) => r.id === recipeId);
+  if (!recipeExists) {
+    return res.status(404).json({ code: "recipe_not_found", message: "Recept nebol nájdený." });
   }
 
-  recipes[index] = { ...recipes[index], ...req.body };
-  writeRecipes(recipes); // Uloženie do súboru
-  res.status(200).json({ message: "Recept bol úspešne aktualizovaný.", recipe: recipes[index] });
+  if (!users[userIndex].favorites.includes(recipeId)) {
+    users[userIndex].favorites.push(recipeId);
+    writeData(usersFile, users);
+  }
+
+  res.status(200).json({ message: "Recept bol pridaný do obľúbených." });
 });
 
-// Odstránenie receptu podľa ID
-router.delete("/:id", (req, res) => {
-  const index = recipes.findIndex((r) => r.id === req.params.id);
-  if (index === -1) {
-    return res.status(404).json({ code: "not_found", message: "Recept nebol nájdený." });
+// Získanie obľúbených receptov
+router.get("/favorites/:userId", (req, res) => {
+  const userId = req.params.userId;
+
+  const user = users.find((u) => u.id === userId);
+  if (!user) {
+    return res.status(404).json({ code: "user_not_found", message: "Používateľ nebol nájdený." });
   }
 
-  recipes.splice(index, 1);
-  writeRecipes(recipes); // Uloženie do súboru
-  res.status(200).json({ message: "Recept bol úspešne zmazaný." });
+  const favoriteRecipes = recipes.filter((r) => user.favorites.includes(r.id));
+  res.status(200).json(favoriteRecipes);
+});
+
+// Štatistiky receptov
+router.get("/stats", (req, res) => {
+  const stats = {
+    totalRecipes: recipes.length,
+    byCategory: recipes.reduce((acc, recipe) => {
+      acc[recipe.category] = (acc[recipe.category] || 0) + 1;
+      return acc;
+    }, {}),
+    averagePopularity: (
+      recipes.reduce((sum, recipe) => sum + recipe.popularity, 0) / recipes.length
+    ).toFixed(2),
+  };
+
+  res.status(200).json(stats);
 });
 
 module.exports = router;
