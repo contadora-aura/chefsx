@@ -6,11 +6,11 @@ const router = express.Router();
 const Ajv = require("ajv");
 const ajv = new Ajv();
 
-// Cesta k súborom
+// Cesta k súborom s receptami a používateľmi
 const recipesFile = path.join(__dirname, "database", "recipes.json");
 const usersFile = path.join(__dirname, "database", "users.json");
 
-// Funkcie na čítanie/zapisovanie
+// Funkcie na čítanie/zapisovanie dát zo/z JSON súborov
 const readData = (filePath) => {
   if (fs.existsSync(filePath)) {
     const data = fs.readFileSync(filePath, "utf-8");
@@ -26,7 +26,7 @@ const writeData = (filePath, data) => {
 let recipes = readData(recipesFile);
 let users = readData(usersFile);
 
-// Schéma pre validáciu receptu
+// Schéma pre validáciu receptu (AJV)
 const recipeSchema = {
   type: "object",
   properties: {
@@ -43,7 +43,7 @@ const recipeSchema = {
   additionalProperties: false,
 };
 
-// Pridanie nového receptu
+// Pridanie nového receptu (iba pre prihlásených používateľov)
 router.post("/", (req, res) => {
   const validate = ajv.compile(recipeSchema);
   if (!validate(req.body)) {
@@ -56,23 +56,23 @@ router.post("/", (req, res) => {
   res.status(201).json({ message: "Recept bol úspešne vytvorený.", recipe: newRecipe });
 });
 
-// Získanie všetkých receptov
+// Získanie všetkých receptov (bez filtrovania)
 router.get("/", (req, res) => {
   res.status(200).json(recipes);
 });
 
-// Filtrovanie receptov
+// Filtrovanie receptov podľa rôznych kritérií
 router.get("/filter", (req, res) => {
   const { category, ingredients, popularity, difficulty, search, maxPrepTime, page = 1, limit = 10 } = req.query;
 
   let filteredRecipes = recipes;
 
-  // Filtrovanie podľa kategórie
+  // Filtrovanie podľa kategórie receptu
   if (category) {
     filteredRecipes = filteredRecipes.filter((recipe) => recipe.category === category);
   }
 
-  // Filtrovanie podľa ingrediencií
+  // Filtrovanie podľa ingrediencií (všetky musia byť v recepte)
   if (ingredients) {
     const ingredientList = ingredients.split(",").map((ing) => ing.trim().toLowerCase());
     filteredRecipes = filteredRecipes.filter((recipe) =>
@@ -82,18 +82,18 @@ router.get("/filter", (req, res) => {
     );
   }
 
-  // Filtrovanie podľa popularity
+  // Filtrovanie podľa popularity receptu
   if (popularity) {
     const minPopularity = parseFloat(popularity);
     filteredRecipes = filteredRecipes.filter((recipe) => recipe.popularity >= minPopularity);
   }
 
-  // Filtrovanie podľa obtiažnosti
+  // Filtrovanie podľa obtiažnosti receptu
   if (difficulty) {
     filteredRecipes = filteredRecipes.filter((recipe) => recipe.difficulty === difficulty);
   }
 
-  // Vyhľadávanie podľa názvu
+  // Vyhľadávanie podľa názvu receptu
   if (search) {
     const keyword = search.toLowerCase();
     filteredRecipes = filteredRecipes.filter((recipe) =>
@@ -101,7 +101,7 @@ router.get("/filter", (req, res) => {
     );
   }
 
-  // Filtrovanie podľa času prípravy
+  // Filtrovanie podľa času prípravy (maximálny čas)
   if (maxPrepTime) {
     const maxTime = parseInt(maxPrepTime, 10);
     filteredRecipes = filteredRecipes.filter((recipe) => {
@@ -110,7 +110,7 @@ router.get("/filter", (req, res) => {
     });
   }
 
-  // Stránkovanie
+  // Stránkovanie výsledkov
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
   const paginatedRecipes = filteredRecipes.slice(startIndex, endIndex);
@@ -123,7 +123,7 @@ router.get("/filter", (req, res) => {
   });
 });
 
-// Hodnotenie receptov
+// Hodnotenie receptov (pridanie hodnotenia)
 router.post("/rate/:recipeId", (req, res) => {
   const { userId, rating } = req.body;
   const recipeId = req.params.recipeId;
@@ -150,7 +150,7 @@ router.post("/rate/:recipeId", (req, res) => {
   res.status(200).json({ message: "Hodnotenie bolo pridané.", recipe });
 });
 
-// Pridanie receptu do obľúbených
+// Pridanie receptu do obľúbených pre používateľa
 router.put("/favorites/:userId/:recipeId", (req, res) => {
   const userId = req.params.userId;
   const recipeId = req.params.recipeId;
@@ -173,7 +173,7 @@ router.put("/favorites/:userId/:recipeId", (req, res) => {
   res.status(200).json({ message: "Recept bol pridaný do obľúbených." });
 });
 
-// Získanie obľúbených receptov
+// Získanie obľúbených receptov pre používateľa
 router.get("/favorites/:userId", (req, res) => {
   const userId = req.params.userId;
 
@@ -186,7 +186,7 @@ router.get("/favorites/:userId", (req, res) => {
   res.status(200).json(favoriteRecipes);
 });
 
-// Štatistiky receptov
+// Štatistiky receptov (počet, podľa kategórií, priemerná popularita)
 router.get("/stats", (req, res) => {
   const stats = {
     totalRecipes: recipes.length,
