@@ -7,7 +7,7 @@ const Ajv = require("ajv");
 const ajv = new Ajv();
 
 // Cesta k súboru s používateľmi
-const usersFile = path.join(__dirname, "database", "users.json");
+const usersFile = path.join(__dirname, "../database/users.json");
 
 // Funkcia na čítanie používateľov z JSON súboru
 const readUsers = () => {

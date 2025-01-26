@@ -7,8 +7,8 @@ const Ajv = require("ajv");
 const ajv = new Ajv();
 
 // Definovanie ciesty k súborom s receptami a používateľmi
-const recipesFile = path.join(__dirname, "database", "recipes.json");
-const usersFile = path.join(__dirname, "database", "users.json");
+const recipesFile = path.join(__dirname, "../database/recipes.json");
+const usersFile = path.join(__dirname, "../database/users.json");
 
 // Funkcia na čítanie dát zo súboru
 const readData = (filePath) => {
@@ -19,7 +19,7 @@ const readData = (filePath) => {
   return [];
 };
 
-// FFunkcia na zápis dát do súboru
+// Funkcia na zápis dát do súboru
 const writeData = (filePath, data) => {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
 };

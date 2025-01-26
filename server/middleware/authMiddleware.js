@@ -1,4 +1,5 @@
-const users = require("./database/users.json");
+const path = require("path");	
+const users = require(path.join(__dirname, '../database/users.json'));
 
 const authenticateUser = (req, res, next) => {
   console.log("Request body:", req.body); // Logovanie požiadavky

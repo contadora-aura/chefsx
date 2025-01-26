@@ -6,11 +6,11 @@ const ajv = new Ajv();
 const app = express();
 
 // Importovanie logiky pre recepty (recipes)
-const recipesRouter = require("./recipes.js");
+const recipesRouter = require("./middleware/recipes.js");
 // Importovanie logiky pre používateľov
-const usersRouter = require("./users.js");
+const usersRouter = require("./middleware/users.js");
 // Importovanie logiky pre komentáre (comments)
-const commentsRouter = require("./comments.js");
+const commentsRouter = require("./middleware/comments.js");
 
 const port = 8000;
 app.use(cors());

@@ -1,1 +1,21 @@
-[]
+[
+  {
+    "id": "8cc1b783-0ae9-4acc-bf7f-e2e5a9b5b12b",
+    "name": "Bravčový guláš",
+    "category": "Hlavné jedlá",
+    "ingredients": [
+      "bravčové mäso",
+      "cibuľa",
+      "cesnak"
+    ],
+    "steps": [
+      "Nakrájaj mäso",
+      "Podus ho",
+      "Podávaj s ryžou"
+    ],
+    "prepTime": "1 hodina",
+    "difficulty": "Stredná",
+    "popularity": 4.5,
+    "image": "https://kuchynalidla.sk/storage/app/uploads/public/5fa/c0f/372/5fac0f3729735079326530.jpg"
+  }
+]

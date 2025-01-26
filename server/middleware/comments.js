@@ -10,9 +10,9 @@ const ajv = new Ajv();
 const authenticateUser = require("./authMiddleware");
 
 // Cesta k súboru s komentármi a receptami
-const commentsFile = path.join(__dirname, "database", "comments.json");
+const commentsFile = path.join(__dirname, "..database/comments.json");
 // Cesta k súboru s receptami
-const recipesFile = path.join(__dirname, "database", "recipes.json");
+const recipesFile = path.join(__dirname, "..database/recipes.json");
 
 // Funkcia na čítanie komentárov z JSON súboru (ak existuje)
 const readComments = () => {
